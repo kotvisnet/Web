@@ -95,9 +95,12 @@ function renderWasteTypes() {
     `;
   }).join('');
 
-  byId('report-waste').innerHTML = state.wasteTypes
+  const options = state.wasteTypes
     .map((w) => `<option value="${w.id}">${escapeHtml(w.name)}</option>`)
     .join('');
+
+  byId('report-waste').innerHTML = options;
+  byId('quick-waste').innerHTML = options;
 
   ui.gallery.innerHTML = state.wasteTypes.map((w) => {
     const image = getWasteImage(w.name, w.description);
@@ -119,7 +122,7 @@ function renderCollectionPoints() {
     [p.name, p.city, p.address].join(' ').toLowerCase().includes(query)
   );
 
-  const rows = filtered.map((p) => `
+  ui.pointBody.innerHTML = filtered.map((p) => `
     <tr>
       <td>${p.id}</td>
       <td>${escapeHtml(p.name)}</td>
@@ -132,7 +135,6 @@ function renderCollectionPoints() {
     </tr>
   `).join('');
 
-  ui.pointBody.innerHTML = rows;
   ui.pointPublicBody.innerHTML = filtered.map((p) => `
     <tr>
       <td>${p.id}</td>
@@ -142,9 +144,11 @@ function renderCollectionPoints() {
     </tr>
   `).join('');
 
-  byId('report-point').innerHTML = state.collectionPoints
+  const options = state.collectionPoints
     .map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.city)})</option>`)
     .join('');
+  byId('report-point').innerHTML = options;
+  byId('quick-point').innerHTML = options;
 }
 
 function renderReports() {
@@ -185,6 +189,16 @@ function renderAchievements(points, reports, weight) {
     .join('');
 }
 
+function renderProfile(userId) {
+  const userReports = state.reports.filter((r) => Number(r.user_id) === Number(userId));
+  const weight = userReports.reduce((sum, r) => sum + Number(r.weight_kg || 0), 0);
+  const points = userReports.reduce((sum, r) => sum + Number(r.earnedPoints || 0), 0);
+
+  byId('profile-reports').textContent = fmt(userReports.length);
+  byId('profile-weight').textContent = fmt(weight);
+  byId('profile-points').textContent = fmt(points);
+}
+
 async function loadAll() {
   try {
     const [wasteTypes, collectionPoints, reports] = await Promise.all([
@@ -200,10 +214,20 @@ async function loadAll() {
     renderWasteTypes();
     renderCollectionPoints();
     renderReports();
+
+    const profileId = byId('profile-user-id').value;
+    if (profileId) renderProfile(profileId);
   } catch (error) {
     ui.formMessage.textContent = `Ошибка загрузки данных: ${error.message}`;
   }
 }
+
+byId('quick-dropoff').addEventListener('submit', (e) => {
+  e.preventDefault();
+  byId('report-waste').value = byId('quick-waste').value;
+  byId('report-point').value = byId('quick-point').value;
+  window.location.hash = '#/dropoff';
+});
 
 byId('waste-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -263,9 +287,15 @@ byId('report-form').addEventListener('submit', async (e) => {
     ui.formMessage.textContent = `✅ Отходы приняты! Вам начислено ${fmt(result.earnedPoints)} баллов.`;
     e.target.reset();
     await loadAll();
+    renderProfile(payload.user_id);
   } catch (error) {
     ui.formMessage.textContent = `❌ Не удалось отправить отчёт: ${error.message}`;
   }
+});
+
+byId('profile-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  renderProfile(byId('profile-user-id').value);
 });
 
 document.body.addEventListener('click', async (e) => {

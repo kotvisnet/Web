@@ -15,6 +15,7 @@
         <a href="#/dropoff" data-link>Сдать отходы</a>
         <a href="#/points" data-link>Пункты приёма</a>
         <a href="#/stats" data-link>Статистика</a>
+        <a href="#/profile" data-link>Мой профиль</a>
         <a href="#/manage" data-link>Управление</a>
       </nav>
       <button id="refresh-all" class="btn btn-secondary">Обновить</button>
@@ -22,20 +23,20 @@
 
     <main>
       <section class="page active" data-page="home">
-        <section class="hero card">
-          <h1>Сдай отходы — получи эко-баллы 🌱</h1>
-          <p>Выберите тип отхода, пункт приёма и вес. После отправки отчёта баллы начисляются автоматически.</p>
-          <a class="btn hero-btn" href="#/dropoff">Начать сдачу</a>
-        </section>
+        <section class="hero card compact-grid">
+          <div>
+            <h1>Сдай отходы — получи эко-баллы 🌱</h1>
+            <p>Выберите тип отхода и пункт приёма, отправьте отчёт — баллы начислятся автоматически.</p>
+            <a class="btn hero-btn" href="#/dropoff">Перейти к сдаче</a>
+            <a class="btn btn-ghost hero-btn" href="#/profile">Посмотреть мой профиль</a>
+          </div>
 
-        <section class="card api-card">
-          <h2>Маршруты API платформы</h2>
-          <ul>
-            <li>CRUD операции для управления пунктами приёма и типами отходов.</li>
-            <li>Расчёт экологического вклада пользователя на основе сданных отходов.</li>
-            <li>Система наград и достижений для активных пользователей.</li>
-            <li>Клиент: веб-приложение с поиском пунктов приёма, статистикой и системой достижений.</li>
-          </ul>
+          <form id="quick-dropoff" class="inline-form quick-form">
+            <h3>Что бы вы хотели сдать?</h3>
+            <select id="quick-waste" required></select>
+            <select id="quick-point" required></select>
+            <button class="btn" type="submit">Выбрать и перейти</button>
+          </form>
         </section>
       </section>
 
@@ -100,11 +101,26 @@
         </section>
       </section>
 
+      <section class="page" data-page="profile">
+        <section class="card profile-card">
+          <h2>Мой профиль</h2>
+          <form id="profile-form" class="inline-form profile-form">
+            <input id="profile-user-id" type="number" min="1" placeholder="Введите ваш User ID" required />
+            <button class="btn" type="submit">Показать мой вклад</button>
+          </form>
+          <div class="profile-grid">
+            <article class="stat-card"><p>Мои отчёты</p><h3 id="profile-reports">0</h3></article>
+            <article class="stat-card"><p>Мой вес</p><h3><span id="profile-weight">0</span> кг</h3></article>
+            <article class="stat-card"><p>Мои баллы</p><h3 id="profile-points">0</h3></article>
+          </div>
+        </section>
+      </section>
+
       <section class="page" data-page="manage">
-        <div class="grid-layout">
+        <div class="manage-layout">
           <section class="card">
-            <h2>Управление типами отходов</h2>
-            <form id="waste-form" class="inline-form manage-form">
+            <h2>Типы отходов</h2>
+            <form id="waste-form" class="inline-form manage-form waste-manage-form">
               <input type="hidden" id="waste-id" />
               <input id="waste-name" placeholder="Название" required />
               <input id="waste-description" placeholder="Описание" required />
@@ -123,8 +139,8 @@
           </section>
 
           <section class="card">
-            <h2>Управление пунктами приёма</h2>
-            <form id="point-form" class="inline-form manage-form">
+            <h2>Пункты приёма</h2>
+            <form id="point-form" class="inline-form manage-form point-manage-form">
               <input type="hidden" id="point-id" />
               <input id="point-name" placeholder="Название пункта" required />
               <input id="point-city" placeholder="Город" required />
