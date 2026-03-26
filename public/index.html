@@ -14,7 +14,8 @@
         <p>Вы хотите сдать отходы?</p>
         <div class="welcome-actions">
           <button id="go-dropoff" class="btn btn-lg" type="button">Да, сдать отходы</button>
-          <button id="go-stats" class="btn btn-ghost btn-lg" type="button">Ознакомиться / проверить статистику</button>
+          <button id="go-info" class="btn btn-ghost btn-lg" type="button">Ознакомиться</button>
+          <button id="go-profile" class="btn btn-ghost btn-lg" type="button">Просмотреть профиль</button>
         </div>
       </div>
     </section>
@@ -22,7 +23,7 @@
     <section class="page" data-page="dropoff">
       <header class="simple-header">
         <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
-        <button class="btn btn-ghost" data-route="profile" type="button">Моя статистика</button>
+        <button class="btn btn-ghost" data-route="profile" type="button">Мой профиль</button>
       </header>
 
       <section class="card">
@@ -35,7 +36,7 @@
         <form id="report-form" class="grid-form report-form">
           <select id="report-waste" required></select>
           <select id="report-point" required></select>
-          <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Вес, кг" required />
+          <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Количество (кг)" required />
           <button class="btn" type="submit">Отправить</button>
         </form>
 
@@ -48,28 +49,19 @@
       </section>
     </section>
 
-    <section class="page" data-page="profile">
+    <section class="page" data-page="info">
       <header class="simple-header">
         <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
-        <button class="btn btn-ghost" data-route="dropoff" type="button">Сдать отходы</button>
       </header>
 
       <section class="card">
-        <h2>Моя статистика</h2>
-        <form id="profile-form" class="grid-form user-form">
-          <input id="profile-id" type="number" min="1" placeholder="User ID" required />
-          <button class="btn" type="submit">Показать</button>
-        </form>
-        <div class="stats-grid">
-          <div class="stat"><span>Отчётов</span><strong id="stat-reports">0</strong></div>
-          <div class="stat"><span>Вес (кг)</span><strong id="stat-weight">0</strong></div>
-          <div class="stat"><span>Баллы</span><strong id="stat-points">0</strong></div>
-        </div>
-        <div id="badge-list" class="badges"></div>
+        <h2>О сайте EcoTrack</h2>
+        <p>EcoTrack помогает сдавать отходы, получать эко-баллы и отслеживать личный вклад в экологию.</p>
+        <p>Вы можете выбрать тип отхода, указать количество и пункт приёма, после чего получить баллы.</p>
       </section>
 
       <section class="card">
-        <h3>Найти ближайший пункт</h3>
+        <h3>Пункты сбора</h3>
         <form id="nearest-form" class="grid-form user-form">
           <input id="nearest-city" placeholder="Введите город" required />
           <button class="btn" type="submit">Найти</button>
@@ -80,6 +72,34 @@
             <tbody id="points-body"></tbody>
           </table>
         </div>
+      </section>
+    </section>
+
+    <section class="page" data-page="profile">
+      <header class="simple-header">
+        <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
+        <button class="btn btn-ghost" data-route="dropoff" type="button">Сдать отходы</button>
+      </header>
+
+      <section class="card">
+        <h2>Вход в профиль</h2>
+        <form id="profile-form" class="grid-form user-form">
+          <input id="profile-id" type="number" min="1" placeholder="User ID" required />
+          <button class="btn" type="submit">Войти</button>
+        </form>
+        <p id="profile-message" class="message"></p>
+      </section>
+
+      <section class="card">
+        <h2>Моя статистика</h2>
+        <div class="stats-grid">
+          <div class="stat"><span>Отчётов</span><strong id="stat-reports">0</strong></div>
+          <div class="stat"><span>Вес (кг)</span><strong id="stat-weight">0</strong></div>
+          <div class="stat"><span>Баллы</span><strong id="stat-points">0</strong></div>
+        </div>
+        <div id="badge-list" class="badges"></div>
+
+        <button id="delete-account" class="btn btn-danger" type="button">Удалить аккаунт</button>
       </section>
     </section>
   </main>

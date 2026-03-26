@@ -16,6 +16,7 @@ const images = {
 
 const byId = (id) => document.getElementById(id);
 const fmt = (n) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+const pages = ['welcome', 'dropoff', 'info', 'profile'];
 
 function getImage(name = '', description = '') {
   const text = `${name} ${description}`.toLowerCase();
@@ -28,9 +29,11 @@ function getImage(name = '', description = '') {
 }
 
 function setPage(page) {
-  const pages = [...document.querySelectorAll('.page')];
-  pages.forEach((p) => p.classList.toggle('active', p.dataset.page === page));
-  window.location.hash = page;
+  const safePage = pages.includes(page) ? page : 'welcome';
+  document.querySelectorAll('.page').forEach((p) => {
+    p.classList.toggle('active', p.dataset.page === safePage);
+  });
+  window.location.hash = safePage;
 }
 
 function getCurrentUserReports() {
@@ -89,7 +92,7 @@ function renderUserStats() {
 
   byId('badge-list').innerHTML = state.userId
     ? badges.map((b) => `<span class="badge ${b.ok ? 'active' : ''}">${b.title}</span>`).join('')
-    : '<span class="badge">Введите User ID</span>';
+    : '<span class="badge">Сначала войдите в профиль</span>';
 }
 
 async function api(path, options = {}) {
@@ -98,7 +101,11 @@ async function api(path, options = {}) {
     ...options
   });
 
-  if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Ошибка API: ${response.status}`);
+  }
+
   const text = await response.text();
   return text ? JSON.parse(text) : null;
 }
@@ -120,7 +127,8 @@ async function loadData() {
 }
 
 byId('go-dropoff').addEventListener('click', () => setPage('dropoff'));
-byId('go-stats').addEventListener('click', () => setPage('profile'));
+byId('go-info').addEventListener('click', () => setPage('info'));
+byId('go-profile').addEventListener('click', () => setPage('profile'));
 
 document.querySelectorAll('[data-route]').forEach((btn) => {
   btn.addEventListener('click', () => setPage(btn.dataset.route));
@@ -140,7 +148,29 @@ byId('profile-form').addEventListener('submit', (e) => {
   state.userId = Number(byId('profile-id').value);
   byId('user-id').value = state.userId;
   localStorage.setItem('eco_user_id', String(state.userId));
+  byId('profile-message').textContent = `Вход выполнен: User ID ${state.userId}`;
   renderUserStats();
+});
+
+byId('delete-account').addEventListener('click', async () => {
+  if (!state.userId) {
+    byId('profile-message').textContent = 'Сначала войдите в профиль.';
+    return;
+  }
+
+  if (!confirm('Удалить аккаунт и данные пользователя?')) return;
+
+  try {
+    await api(`/users/${state.userId}`, { method: 'DELETE' });
+    state.userId = null;
+    localStorage.removeItem('eco_user_id');
+    byId('user-id').value = '';
+    byId('profile-id').value = '';
+    byId('profile-message').textContent = 'Аккаунт удалён.';
+    renderUserStats();
+  } catch (error) {
+    byId('profile-message').textContent = `Не удалось удалить аккаунт: ${error.message}`;
+  }
 });
 
 byId('report-form').addEventListener('submit', async (e) => {
@@ -191,6 +221,7 @@ if (savedId) {
   state.userId = savedId;
   byId('user-id').value = savedId;
   byId('profile-id').value = savedId;
+  byId('profile-message').textContent = `Автовход: User ID ${savedId}`;
 }
 
 const hashPage = window.location.hash.replace('#', '') || 'welcome';
