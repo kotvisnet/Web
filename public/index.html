@@ -3,94 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EcoTrack — Экоплатформа</title>
+  <title>EcoTrack</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#/home">EcoTrack ♻️</a>
+  <main class="app">
+    <section class="page active welcome-page" data-page="welcome">
+      <div class="welcome-card">
+        <h1>EcoTrack ♻️</h1>
+        <p>Вы хотите сдать отходы?</p>
+        <div class="welcome-actions">
+          <button id="go-dropoff" class="btn btn-lg" type="button">Да, сдать отходы</button>
+          <button id="go-stats" class="btn btn-ghost btn-lg" type="button">Ознакомиться / проверить статистику</button>
+        </div>
+      </div>
+    </section>
 
-      <nav class="main-nav" aria-label="Навигация">
-        <a href="#/home" data-link>Главная</a>
-        <a href="#/dropoff" data-link>Сдать отходы</a>
-        <a href="#/points" data-link>Ближайший пункт</a>
-        <a href="#/profile" data-link>Моя статистика</a>
-      </nav>
+    <section class="page" data-page="dropoff">
+      <header class="simple-header">
+        <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
+        <button class="btn btn-ghost" data-route="profile" type="button">Моя статистика</button>
+      </header>
 
-      <form id="user-context-form" class="user-context">
-        <input id="global-user-id" type="number" min="1" placeholder="User ID" required />
-        <button class="btn" type="submit">Сохранить</button>
-      </form>
-    </header>
+      <section class="card">
+        <h2>Сдать отходы</h2>
+        <form id="user-form" class="grid-form user-form">
+          <input id="user-id" type="number" min="1" placeholder="Ваш User ID" required />
+          <button class="btn" type="submit">Сохранить User ID</button>
+        </form>
 
-    <main>
-      <section class="page active" data-page="home">
-        <section class="card hero">
-          <h1>Сдавайте отходы и получайте эко-баллы</h1>
-          <p>1) Укажите ваш User ID сверху. 2) Перейдите в «Сдать отходы». 3) Получите баллы и смотрите прогресс.</p>
-          <div class="cta-row">
-            <a class="btn" href="#/dropoff">Перейти к сдаче</a>
-            <a class="btn btn-ghost" href="#/profile">Открыть мою статистику</a>
-          </div>
-        </section>
+        <form id="report-form" class="grid-form report-form">
+          <select id="report-waste" required></select>
+          <select id="report-point" required></select>
+          <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Вес, кг" required />
+          <button class="btn" type="submit">Отправить</button>
+        </form>
 
-        <section class="card">
-          <h2>Какие отходы можно сдать</h2>
-          <div id="waste-gallery" class="gallery-grid"></div>
-        </section>
+        <p id="report-message" class="message"></p>
       </section>
 
-      <section class="page" data-page="dropoff">
-        <section class="card">
-          <h2>Сдать отходы</h2>
-          <form id="report-form" class="inline-form dropoff-form">
-            <select id="report-waste" required></select>
-            <select id="report-point" required></select>
-            <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Вес, кг" required />
-            <button class="btn" type="submit">Отправить отчёт</button>
-          </form>
-          <p id="form-message" class="message"></p>
-        </section>
+      <section class="card">
+        <h3>Категории отходов</h3>
+        <div id="waste-gallery" class="gallery"></div>
+      </section>
+    </section>
 
-        <section class="card">
-          <h2>Мои достижения</h2>
-          <div class="badge-list" id="badge-list"></div>
-        </section>
+    <section class="page" data-page="profile">
+      <header class="simple-header">
+        <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
+        <button class="btn btn-ghost" data-route="dropoff" type="button">Сдать отходы</button>
+      </header>
+
+      <section class="card">
+        <h2>Моя статистика</h2>
+        <form id="profile-form" class="grid-form user-form">
+          <input id="profile-id" type="number" min="1" placeholder="User ID" required />
+          <button class="btn" type="submit">Показать</button>
+        </form>
+        <div class="stats-grid">
+          <div class="stat"><span>Отчётов</span><strong id="stat-reports">0</strong></div>
+          <div class="stat"><span>Вес (кг)</span><strong id="stat-weight">0</strong></div>
+          <div class="stat"><span>Баллы</span><strong id="stat-points">0</strong></div>
+        </div>
+        <div id="badge-list" class="badges"></div>
       </section>
 
-      <section class="page" data-page="points">
-        <section class="card">
-          <h2>Найти ближайший пункт приёма</h2>
-          <form id="nearest-form" class="inline-form nearest-form">
-            <input id="nearest-city" placeholder="Введите ваш город" required />
-            <button class="btn" type="submit">Найти</button>
-          </form>
-          <p id="nearest-message" class="message"></p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>Название</th><th>Город</th><th>Адрес</th></tr>
-              </thead>
-              <tbody id="point-public-body"></tbody>
-            </table>
-          </div>
-        </section>
+      <section class="card">
+        <h3>Найти ближайший пункт</h3>
+        <form id="nearest-form" class="grid-form user-form">
+          <input id="nearest-city" placeholder="Введите город" required />
+          <button class="btn" type="submit">Найти</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Название</th><th>Город</th><th>Адрес</th></tr></thead>
+            <tbody id="points-body"></tbody>
+          </table>
+        </div>
       </section>
-
-      <section class="page" data-page="profile">
-        <section class="card">
-          <h2>Моя статистика</h2>
-          <p id="profile-user-label" class="profile-user-label">User ID не выбран</p>
-          <div class="profile-grid">
-            <article class="stat-card"><p>Сдано отчётов</p><h3 id="profile-reports">0</h3></article>
-            <article class="stat-card"><p>Сдано кг</p><h3><span id="profile-weight">0</span></h3></article>
-            <article class="stat-card"><p>Получено баллов</p><h3 id="profile-points">0</h3></article>
-          </div>
-        </section>
-      </section>
-    </main>
-  </div>
+    </section>
+  </main>
 
   <script src="/js/main.js"></script>
 </body>
