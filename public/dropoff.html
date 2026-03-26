@@ -21,8 +21,10 @@
       </form>
 
       <form id="report-form" class="grid-form report-form-text">
-        <input id="waste-type-name" placeholder="Вид отхода (например: Пластик)" required />
-        <input id="collection-point-name" placeholder="Пункт выдачи/приёма" required />
+        <input id="waste-type-name" list="waste-types-list" placeholder="Вид отхода (например: Пластик)" required />
+        <datalist id="waste-types-list"></datalist>
+        <input id="collection-point-name" list="points-list" placeholder="Пункт выдачи/приёма" required />
+        <datalist id="points-list"></datalist>
         <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Количество (кг)" required />
         <button class="btn" type="submit">Отправить</button>
       </form>

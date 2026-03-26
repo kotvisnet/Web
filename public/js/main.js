@@ -18,6 +18,7 @@ const images = {
 const byId = (id) => document.getElementById(id);
 const hasEl = (id) => Boolean(document.getElementById(id));
 const fmt = (n) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+const normalize = (v) => String(v || '').trim().toLowerCase();
 
 function getImage(name = '', description = '') {
   const text = `${name} ${description}`.toLowerCase();
@@ -38,6 +39,12 @@ function getCurrentUserReports() {
 
 function renderWasteGallery() {
   if (!hasEl('waste-gallery')) return;
+
+  if (hasEl('waste-types-list')) {
+    byId('waste-types-list').innerHTML = state.wasteTypes
+      .map((w) => `<option value="${escapeHtml(w.name)}"></option>`)
+      .join('');
+  }
 
   if (!state.wasteTypes.length) {
     byId('waste-gallery').innerHTML = '<p>Можно сдавать: пластик, бумагу, стекло, металл и органику.</p>';
@@ -74,6 +81,12 @@ function renderBenefits() {
 }
 
 function renderPoints(points = state.points) {
+  if (hasEl('points-list')) {
+    byId('points-list').innerHTML = state.points
+      .map((p) => `<option value="${escapeHtml(p.name)}"></option>`)
+      .join('');
+  }
+
   if (!hasEl('points-body')) return;
   byId('points-body').innerHTML = points.length
     ? points.map((p) => `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.city)}</td><td>${escapeHtml(p.address)}</td></tr>`).join('')
@@ -230,10 +243,20 @@ if (hasEl('report-form')) {
       return;
     }
 
-    const matchedWaste = state.wasteTypes.find((w) => w.name.toLowerCase() === wasteName.toLowerCase());
-    const matchedPoint = state.points.find((p) => p.name.toLowerCase() === pointName.toLowerCase());
+    const matchedWaste = state.wasteTypes.find((w) => normalize(w.name) === normalize(wasteName));
+    const matchedPoint = state.points.find((p) => normalize(p.name) === normalize(pointName));
 
-    const pointsPerKg = matchedWaste ? Number(matchedWaste.eco_points_per_kg || 10) : 10;
+    if (!matchedWaste) {
+      byId('report-message').textContent = 'Выберите вид отхода из списка (например: Пластик).';
+      return;
+    }
+
+    if (!matchedPoint) {
+      byId('report-message').textContent = 'Выберите пункт приёма из списка.';
+      return;
+    }
+
+    const pointsPerKg = Number(matchedWaste.eco_points_per_kg || 10);
 
     // Локально сохраняем всегда — это гарантирует «сохраняй это для пользователя».
     state.localReports.push({
@@ -249,21 +272,18 @@ if (hasEl('report-form')) {
     });
     saveLocalReports();
 
-    // Если нашли соответствующие IDs — пытаемся писать и в БД через API.
-    if (matchedWaste && matchedPoint) {
-      try {
-        await api('/reports', {
-          method: 'POST',
-          body: JSON.stringify({
-            user_id: state.userId,
-            waste_type_id: matchedWaste.id,
-            collection_point_id: matchedPoint.id,
-            weight_kg: weight
-          })
-        });
-      } catch {
-        // Игнорируем ошибку API: локально заявка уже сохранена
-      }
+    try {
+      await api('/reports', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: state.userId,
+          waste_type_id: matchedWaste.id,
+          collection_point_id: matchedPoint.id,
+          weight_kg: weight
+        })
+      });
+    } catch {
+      // Игнорируем ошибку API: локально заявка уже сохранена
     }
 
     byId('report-message').textContent = 'Заявка отправлена!';
