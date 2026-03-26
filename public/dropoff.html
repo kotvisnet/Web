@@ -20,17 +20,12 @@
         <button class="btn" type="submit">Сохранить User ID</button>
       </form>
 
-      <form id="report-form" class="grid-form report-form">
-        <select id="report-waste" required></select>
-        <select id="report-point" required></select>
+      <form id="report-form" class="grid-form report-form-text">
+        <input id="waste-type-name" placeholder="Вид отхода (например: Пластик)" required />
+        <input id="collection-point-name" placeholder="Пункт выдачи/приёма" required />
         <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Количество (кг)" required />
         <button class="btn" type="submit">Отправить</button>
       </form>
-        <div class="manual-note">Если списки пустые, введите ID вручную:</div>
-        <div class="grid-form manual-form">
-          <input id="manual-waste-id" type="number" min="1" placeholder="ID типа отхода" />
-          <input id="manual-point-id" type="number" min="1" placeholder="ID пункта приёма" />
-        </div>
 
       <p id="report-message" class="message"></p>
     </section>

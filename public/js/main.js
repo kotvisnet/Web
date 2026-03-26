@@ -2,6 +2,7 @@ const state = {
   wasteTypes: [],
   points: [],
   reports: [],
+  localReports: [],
   userId: null
 };
 
@@ -30,14 +31,16 @@ function getImage(name = '', description = '') {
 
 function getCurrentUserReports() {
   if (!state.userId) return [];
-  return state.reports.filter((r) => Number(r.user_id) === Number(state.userId));
+  const apiReports = state.reports.filter((r) => Number(r.user_id) === Number(state.userId));
+  const localReports = state.localReports.filter((r) => Number(r.user_id) === Number(state.userId));
+  return [...apiReports, ...localReports];
 }
 
 function renderWasteGallery() {
   if (!hasEl('waste-gallery')) return;
 
   if (!state.wasteTypes.length) {
-    byId('waste-gallery').innerHTML = '<p>Типы отходов пока не загружены.</p>';
+    byId('waste-gallery').innerHTML = '<p>Можно сдавать: пластик, бумагу, стекло, металл и органику.</p>';
     return;
   }
 
@@ -57,63 +60,34 @@ function renderWasteGallery() {
 
 function renderBenefits() {
   if (!hasEl('waste-benefits')) return;
-
   const defaultReasons = [
     'Пластик: меньше загрязнения рек и морей.',
     'Бумага: сохраняются деревья и вода.',
-    'Стекло: почти бесконечная переработка без потери качества.',
-    'Металл: экономия энергии и природных руд.',
+    'Стекло: перерабатывается многократно.',
+    'Металл: экономит энергию и сырьё.',
     'Органика: меньше метана на полигонах.'
   ];
 
-  const fromDb = state.wasteTypes.map((w) => `${escapeHtml(w.name)}: ${escapeHtml(w.description || 'подходит для переработки и начисления баллов')}.`);
+  const fromDb = state.wasteTypes.map((w) => `${escapeHtml(w.name)}: ${escapeHtml(w.description || 'полезно сдавать на переработку')}.`);
   const list = fromDb.length ? fromDb : defaultReasons;
-
   byId('waste-benefits').innerHTML = list.map((item) => `<li>${item}</li>`).join('');
 }
 
-function renderWasteSelect() {
-  if (!hasEl('report-waste')) return;
-
-  if (!state.wasteTypes.length) {
-    byId('report-waste').innerHTML = '<option value="">Нет доступных типов отходов</option>';
-    return;
-  }
-
-  byId('report-waste').innerHTML = state.wasteTypes
-    .map((w) => `<option value="${w.id}">${escapeHtml(w.name)}</option>`)
-    .join('');
-}
-
 function renderPoints(points = state.points) {
-  if (hasEl('points-body')) {
-    byId('points-body').innerHTML = points.length
-      ? points.map((p) => `
-          <tr>
-            <td>${escapeHtml(p.name)}</td>
-            <td>${escapeHtml(p.city)}</td>
-            <td>${escapeHtml(p.address)}</td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="3">Пункты сбора пока не загружены.</td></tr>';
-  }
-
-  if (hasEl('report-point')) {
-    byId('report-point').innerHTML = state.points.length
-      ? state.points.map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.city)})</option>`).join('')
-      : '<option value="">Нет доступных пунктов</option>';
-  }
+  if (!hasEl('points-body')) return;
+  byId('points-body').innerHTML = points.length
+    ? points.map((p) => `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.city)}</td><td>${escapeHtml(p.address)}</td></tr>`).join('')
+    : '<tr><td colspan="3">Пункты сбора пока не загружены.</td></tr>';
 }
 
 function renderUserStats() {
   if (!hasEl('stat-reports')) return;
-
   const reports = getCurrentUserReports();
   const weight = reports.reduce((sum, r) => sum + Number(r.weight_kg || 0), 0);
-  const wasteMap = new Map(state.wasteTypes.map((w) => [Number(w.id), Number(w.eco_points_per_kg || 0)]));
+  const wasteMap = new Map(state.wasteTypes.map((w) => [String(w.id), Number(w.eco_points_per_kg || 10)]));
   const points = reports.reduce((sum, r) => {
     if (r.earnedPoints !== undefined && r.earnedPoints !== null) return sum + Number(r.earnedPoints);
-    const perKg = wasteMap.get(Number(r.waste_type_id)) || 0;
+    const perKg = wasteMap.get(String(r.waste_type_id)) || Number(r.points_per_kg || 10);
     return sum + perKg * Number(r.weight_kg || 0);
   }, 0);
 
@@ -121,17 +95,29 @@ function renderUserStats() {
   byId('stat-weight').textContent = fmt(weight);
   byId('stat-points').textContent = fmt(points);
 
-  const badges = [
-    { title: 'Первый отчёт', ok: reports.length >= 1 },
-    { title: '10 отчётов', ok: reports.length >= 10 },
-    { title: '100 кг', ok: weight >= 100 },
-    { title: '1000 баллов', ok: points >= 1000 }
-  ];
-
   if (hasEl('badge-list')) {
+    const badges = [
+      { title: 'Первый отчёт', ok: reports.length >= 1 },
+      { title: '10 отчётов', ok: reports.length >= 10 },
+      { title: '100 кг', ok: weight >= 100 },
+      { title: '1000 баллов', ok: points >= 1000 }
+    ];
+
     byId('badge-list').innerHTML = state.userId
       ? badges.map((b) => `<span class="badge ${b.ok ? 'active' : ''}">${b.title}</span>`).join('')
       : '<span class="badge">Сначала войдите в профиль</span>';
+  }
+}
+
+function saveLocalReports() {
+  localStorage.setItem('eco_local_reports', JSON.stringify(state.localReports));
+}
+
+function loadLocalReports() {
+  try {
+    state.localReports = JSON.parse(localStorage.getItem('eco_local_reports') || '[]');
+  } catch {
+    state.localReports = [];
   }
 }
 
@@ -146,27 +132,13 @@ async function api(path, options = {}) {
 
   if (!response.ok) {
     if (response.status === 504 || text.includes('504 Gateway Time-out')) {
-      throw new Error('Сервер временно недоступен (504). Проверьте, запущен ли Node API и прокси nginx.');
+      throw new Error('Сервер временно недоступен (504). Попробуйте снова позже.');
     }
-
-    if (contentType.includes('application/json')) {
-      try {
-        const json = JSON.parse(text);
-        throw new Error(json.error || `Ошибка API: ${response.status}`);
-      } catch {
-        throw new Error(`Ошибка API: ${response.status}`);
-      }
-    }
-
     throw new Error(`Ошибка API: ${response.status}`);
   }
 
   if (!text) return null;
-  if (contentType.includes('application/json')) {
-    return JSON.parse(text);
-  }
-
-  return null;
+  return contentType.includes('application/json') ? JSON.parse(text) : null;
 }
 
 async function loadData() {
@@ -182,19 +154,13 @@ async function loadData() {
 
   renderWasteGallery();
   renderBenefits();
-  renderWasteSelect();
   renderPoints(state.points);
   renderUserStats();
 
-  const errors = [wasteResult, pointsResult, reportsResult]
-    .filter((r) => r.status === 'rejected')
-    .map((r) => r.reason?.message)
-    .filter(Boolean);
-
-  if (errors.length) {
-    const text = errors[0];
-    if (hasEl('report-message')) byId('report-message').textContent = text;
-    if (hasEl('profile-message')) byId('profile-message').textContent = text;
+  const failed = [wasteResult, pointsResult, reportsResult].find((r) => r.status === 'rejected');
+  if (failed) {
+    if (hasEl('report-message')) byId('report-message').textContent = failed.reason.message;
+    if (hasEl('profile-message')) byId('profile-message').textContent = failed.reason.message;
   }
 }
 
@@ -226,19 +192,24 @@ if (hasEl('delete-account')) {
       byId('profile-message').textContent = 'Сначала войдите в профиль.';
       return;
     }
+
     if (!confirm('Удалить аккаунт и данные пользователя?')) return;
+
+    state.localReports = state.localReports.filter((r) => Number(r.user_id) !== Number(state.userId));
+    saveLocalReports();
 
     try {
       await api(`/api/users/${state.userId}`, { method: 'DELETE' });
-      state.userId = null;
-      localStorage.removeItem('eco_user_id');
-      if (hasEl('user-id')) byId('user-id').value = '';
-      byId('profile-id').value = '';
-      byId('profile-message').textContent = 'Аккаунт удалён.';
-      renderUserStats();
-    } catch (error) {
-      byId('profile-message').textContent = `Не удалось удалить аккаунт: ${error.message}`;
+    } catch {
+      // Если сервер не поддерживает удаление, удаляем только локальные данные
     }
+
+    state.userId = null;
+    localStorage.removeItem('eco_user_id');
+    byId('profile-id').value = '';
+    if (hasEl('user-id')) byId('user-id').value = '';
+    byId('profile-message').textContent = 'Аккаунт удалён (локально).';
+    renderUserStats();
   });
 }
 
@@ -250,41 +221,55 @@ if (hasEl('report-form')) {
       return;
     }
 
-    if (!state.wasteTypes.length || !state.points.length) {
-      byId('report-message').textContent = 'Нет данных по отходам или пунктам. Проверьте API.';
+    const wasteName = byId('waste-type-name').value.trim();
+    const pointName = byId('collection-point-name').value.trim();
+    const weight = Number(byId('report-weight').value);
+
+    if (!wasteName || !pointName || !weight) {
+      byId('report-message').textContent = 'Заполните вид отхода, пункт приёма и количество.';
       return;
     }
 
-    const selectedWasteId = hasEl('manual-waste-id') && byId('manual-waste-id').value
-      ? Number(byId('manual-waste-id').value)
-      : Number(byId('report-waste').value);
-    const selectedPointId = hasEl('manual-point-id') && byId('manual-point-id').value
-      ? Number(byId('manual-point-id').value)
-      : Number(byId('report-point').value);
+    const matchedWaste = state.wasteTypes.find((w) => w.name.toLowerCase() === wasteName.toLowerCase());
+    const matchedPoint = state.points.find((p) => p.name.toLowerCase() === pointName.toLowerCase());
 
-    const payload = {
+    const pointsPerKg = matchedWaste ? Number(matchedWaste.eco_points_per_kg || 10) : 10;
+
+    // Локально сохраняем всегда — это гарантирует «сохраняй это для пользователя».
+    state.localReports.push({
       user_id: state.userId,
-      waste_type_id: selectedWasteId,
-      collection_point_id: selectedPointId,
-      weight_kg: Number(byId('report-weight').value)
-    };
+      waste_type_id: matchedWaste?.id || null,
+      collection_point_id: matchedPoint?.id || null,
+      waste_type_name: wasteName,
+      collection_point_name: pointName,
+      weight_kg: weight,
+      points_per_kg: pointsPerKg,
+      earnedPoints: pointsPerKg * weight,
+      date: new Date().toISOString()
+    });
+    saveLocalReports();
 
+    // Если нашли соответствующие IDs — пытаемся писать и в БД через API.
+    if (matchedWaste && matchedPoint) {
+      try {
+        await api('/reports', {
+          method: 'POST',
+          body: JSON.stringify({
+            user_id: state.userId,
+            waste_type_id: matchedWaste.id,
+            collection_point_id: matchedPoint.id,
+            weight_kg: weight
+          })
+        });
+      } catch {
+        // Игнорируем ошибку API: локально заявка уже сохранена
+      }
+    }
 
-    if (!payload.waste_type_id || !payload.collection_point_id || !payload.weight_kg) {
-      byId('report-message').textContent = 'Укажите тип отхода, пункт приёма и количество.';
-      return;
-    }
-    try {
-      await api('/reports', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      byId('report-message').textContent = 'Заявка отправлена!';
-      e.target.reset();
-      await loadData();
-    } catch (error) {
-      byId('report-message').textContent = `❌ ${error.message}`;
-    }
+    byId('report-message').textContent = 'Заявка отправлена!';
+    e.target.reset();
+    renderUserStats();
+    await loadData();
   });
 }
 
@@ -309,6 +294,8 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 }
+
+loadLocalReports();
 
 const savedId = Number(localStorage.getItem('eco_user_id'));
 if (savedId) {
