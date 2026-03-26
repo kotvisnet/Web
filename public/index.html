@@ -10,23 +10,28 @@
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="#/home">EcoTrack ♻️</a>
+
       <nav class="main-nav" aria-label="Навигация">
         <a href="#/home" data-link>Главная</a>
         <a href="#/dropoff" data-link>Сдать отходы</a>
         <a href="#/points" data-link>Ближайший пункт</a>
         <a href="#/profile" data-link>Моя статистика</a>
       </nav>
-      <button id="refresh-all" class="btn btn-secondary">Обновить</button>
+
+      <form id="user-context-form" class="user-context">
+        <input id="global-user-id" type="number" min="1" placeholder="User ID" required />
+        <button class="btn" type="submit">Сохранить</button>
+      </form>
     </header>
 
     <main>
       <section class="page active" data-page="home">
         <section class="card hero">
-          <h1>Сдавайте отходы и зарабатывайте эко-баллы 🌱</h1>
-          <p>Простой сервис: выбрать отход, выбрать пункт приёма, указать вес и получить баллы.</p>
+          <h1>Сдавайте отходы и получайте эко-баллы</h1>
+          <p>1) Укажите ваш User ID сверху. 2) Перейдите в «Сдать отходы». 3) Получите баллы и смотрите прогресс.</p>
           <div class="cta-row">
-            <a class="btn" href="#/dropoff">Сдать отходы</a>
-            <a class="btn btn-ghost" href="#/profile">Посмотреть мою статистику</a>
+            <a class="btn" href="#/dropoff">Перейти к сдаче</a>
+            <a class="btn btn-ghost" href="#/profile">Открыть мою статистику</a>
           </div>
         </section>
 
@@ -40,11 +45,10 @@
         <section class="card">
           <h2>Сдать отходы</h2>
           <form id="report-form" class="inline-form dropoff-form">
-            <input id="report-user" type="number" min="1" placeholder="Ваш User ID" required />
             <select id="report-waste" required></select>
             <select id="report-point" required></select>
             <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Вес, кг" required />
-            <button class="btn" type="submit">Отправить</button>
+            <button class="btn" type="submit">Отправить отчёт</button>
           </form>
           <p id="form-message" class="message"></p>
         </section>
@@ -77,11 +81,7 @@
       <section class="page" data-page="profile">
         <section class="card">
           <h2>Моя статистика</h2>
-          <form id="profile-form" class="inline-form profile-form">
-            <input id="profile-user-id" type="number" min="1" placeholder="Введите ваш User ID" required />
-            <button class="btn" type="submit">Показать</button>
-          </form>
-
+          <p id="profile-user-label" class="profile-user-label">User ID не выбран</p>
           <div class="profile-grid">
             <article class="stat-card"><p>Сдано отчётов</p><h3 id="profile-reports">0</h3></article>
             <article class="stat-card"><p>Сдано кг</p><h3><span id="profile-weight">0</span></h3></article>

@@ -1,7 +1,8 @@
 const state = {
   wasteTypes: [],
   collectionPoints: [],
-  reports: []
+  reports: [],
+  currentUserId: null
 };
 
 const wasteImages = {
@@ -23,7 +24,8 @@ const ui = {
   pointsBody: byId('point-public-body'),
   badgeList: byId('badge-list'),
   nearestMessage: byId('nearest-message'),
-  formMessage: byId('form-message')
+  formMessage: byId('form-message'),
+  profileUserLabel: byId('profile-user-label')
 };
 
 function getWasteImage(name = '', description = '') {
@@ -38,7 +40,9 @@ function getWasteImage(name = '', description = '') {
 
 function routeFromHash() {
   const hash = window.location.hash || '#/home';
-  return hash.replace('#/', '') || 'home';
+  const route = hash.replace('#/', '') || 'home';
+  const exists = ui.pages.some((p) => p.dataset.page === route);
+  return exists ? route : 'home';
 }
 
 function applyRoute() {
@@ -95,8 +99,17 @@ function renderPoints(points = state.collectionPoints) {
   byId('report-point').innerHTML = pointOptions;
 }
 
+function getUserReports(userId) {
+  return state.reports.filter((r) => Number(r.user_id) === Number(userId));
+}
+
 function renderAchievementsForUser(userId) {
-  const userReports = state.reports.filter((r) => Number(r.user_id) === Number(userId));
+  if (!userId) {
+    ui.badgeList.innerHTML = '<span class="badge">Укажите User ID, чтобы увидеть достижения</span>';
+    return;
+  }
+
+  const userReports = getUserReports(userId);
   const weight = userReports.reduce((sum, r) => sum + Number(r.weight_kg || 0), 0);
   const points = userReports.reduce((sum, r) => sum + Number(r.earnedPoints || 0), 0);
 
@@ -113,17 +126,35 @@ function renderAchievementsForUser(userId) {
 }
 
 function renderProfile(userId) {
-  const userReports = state.reports.filter((r) => Number(r.user_id) === Number(userId));
+  if (!userId) {
+    ui.profileUserLabel.textContent = 'User ID не выбран';
+    byId('profile-reports').textContent = '0';
+    byId('profile-weight').textContent = '0';
+    byId('profile-points').textContent = '0';
+    return;
+  }
+
+  const userReports = getUserReports(userId);
   const weight = userReports.reduce((sum, r) => sum + Number(r.weight_kg || 0), 0);
   const points = userReports.reduce((sum, r) => sum + Number(r.earnedPoints || 0), 0);
 
+  ui.profileUserLabel.textContent = `Статистика для User ID: ${userId}`;
   byId('profile-reports').textContent = fmt(userReports.length);
   byId('profile-weight').textContent = fmt(weight);
   byId('profile-points').textContent = fmt(points);
 }
 
+function setCurrentUserId(userId) {
+  state.currentUserId = Number(userId);
+  localStorage.setItem('eco_user_id', String(state.currentUserId));
+  byId('global-user-id').value = state.currentUserId;
+  renderProfile(state.currentUserId);
+  renderAchievementsForUser(state.currentUserId);
+}
+
 async function loadAll() {
   try {
+    byId('refresh-all').disabled = true;
     const [wasteTypes, collectionPoints, reports] = await Promise.all([
       api('/waste-types'),
       api('/collection-points'),
@@ -136,15 +167,32 @@ async function loadAll() {
 
     renderWasteGallery();
     renderPoints();
+    renderProfile(state.currentUserId);
+    renderAchievementsForUser(state.currentUserId);
   } catch (error) {
     ui.formMessage.textContent = error.message;
+  } finally {
+    byId('refresh-all').disabled = false;
   }
 }
 
+byId('user-context-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const userId = Number(byId('global-user-id').value);
+  if (!userId) return;
+  setCurrentUserId(userId);
+  ui.formMessage.textContent = 'User ID сохранён. Теперь можно сдавать отходы.';
+});
+
 byId('report-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (!state.currentUserId) {
+    ui.formMessage.textContent = 'Сначала укажите User ID в верхней панели.';
+    return;
+  }
+
   const payload = {
-    user_id: Number(byId('report-user').value),
+    user_id: state.currentUserId,
     waste_type_id: Number(byId('report-waste').value),
     collection_point_id: Number(byId('report-point').value),
     weight_kg: Number(byId('report-weight').value)
@@ -157,20 +205,11 @@ byId('report-form').addEventListener('submit', async (e) => {
     });
 
     ui.formMessage.textContent = `✅ Готово! Начислено ${fmt(result.earnedPoints)} баллов.`;
-    renderAchievementsForUser(payload.user_id);
     e.target.reset();
     await loadAll();
-    renderProfile(payload.user_id);
   } catch (error) {
     ui.formMessage.textContent = `❌ ${error.message}`;
   }
-});
-
-byId('profile-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const userId = Number(byId('profile-user-id').value);
-  renderProfile(userId);
-  renderAchievementsForUser(userId);
 });
 
 byId('nearest-form').addEventListener('submit', (e) => {
@@ -181,7 +220,7 @@ byId('nearest-form').addEventListener('submit', (e) => {
 
   const result = exact.length ? exact : similar;
   if (!result.length) {
-    ui.nearestMessage.textContent = 'Пункты в этом городе не найдены. Показываем все доступные.';
+    ui.nearestMessage.textContent = 'Пункты в этом городе не найдены. Показаны все доступные.';
     renderPoints(state.collectionPoints);
     return;
   }
@@ -201,6 +240,9 @@ function escapeHtml(text) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 }
+
+const savedUserId = Number(localStorage.getItem('eco_user_id'));
+if (savedUserId) setCurrentUserId(savedUserId);
 
 applyRoute();
 loadAll();
