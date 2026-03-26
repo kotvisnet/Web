@@ -18,6 +18,18 @@ const byId = (id) => document.getElementById(id);
 const fmt = (n) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
 const pages = ['welcome', 'dropoff', 'info', 'profile'];
 
+function getCurrentPage() {
+  const raw = window.location.hash.replace('#', '');
+  return pages.includes(raw) ? raw : 'welcome';
+}
+
+function applyRoute() {
+  const page = getCurrentPage();
+  document.querySelectorAll('.page').forEach((p) => {
+    p.classList.toggle('active', p.dataset.page === page);
+  });
+}
+
 function getImage(name = '', description = '') {
   const text = `${name} ${description}`.toLowerCase();
   if (text.includes('пласт') || text.includes('plastic')) return images.plastic;
@@ -26,14 +38,6 @@ function getImage(name = '', description = '') {
   if (text.includes('металл') || text.includes('metal')) return images.metal;
   if (text.includes('орган') || text.includes('био') || text.includes('food')) return images.organic;
   return images.default;
-}
-
-function setPage(page) {
-  const safePage = pages.includes(page) ? page : 'welcome';
-  document.querySelectorAll('.page').forEach((p) => {
-    p.classList.toggle('active', p.dataset.page === safePage);
-  });
-  window.location.hash = safePage;
 }
 
 function getCurrentUserReports() {
@@ -126,14 +130,6 @@ async function loadData() {
   renderUserStats();
 }
 
-byId('go-dropoff').addEventListener('click', () => setPage('dropoff'));
-byId('go-info').addEventListener('click', () => setPage('info'));
-byId('go-profile').addEventListener('click', () => setPage('profile'));
-
-document.querySelectorAll('[data-route]').forEach((btn) => {
-  btn.addEventListener('click', () => setPage(btn.dataset.route));
-});
-
 byId('user-form').addEventListener('submit', (e) => {
   e.preventDefault();
   state.userId = Number(byId('user-id').value);
@@ -224,8 +220,12 @@ if (savedId) {
   byId('profile-message').textContent = `Автовход: User ID ${savedId}`;
 }
 
-const hashPage = window.location.hash.replace('#', '') || 'welcome';
-setPage(hashPage);
+if (!pages.includes(window.location.hash.replace('#', ''))) {
+  window.location.hash = '#welcome';
+}
+
+window.addEventListener('hashchange', applyRoute);
+applyRoute();
 
 loadData().catch((error) => {
   byId('report-message').textContent = error.message;

@@ -41,7 +41,7 @@ p { color: var(--muted); }
 
 input, select, button { min-height: 42px; border-radius: 10px; border: 1px solid var(--border); padding: 8px 10px; font-size: 16px; }
 
-.btn { border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; }
+.btn { border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .btn-lg { min-height: 52px; font-size: 18px; }
 .btn-ghost { border: 1px solid var(--border); background: #f3f4f6; color: #111827; }
 .btn-danger { background: var(--danger); margin-top: 10px; }

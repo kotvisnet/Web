@@ -13,17 +13,17 @@
         <h1>EcoTrack ♻️</h1>
         <p>Вы хотите сдать отходы?</p>
         <div class="welcome-actions">
-          <button id="go-dropoff" class="btn btn-lg" type="button">Да, сдать отходы</button>
-          <button id="go-info" class="btn btn-ghost btn-lg" type="button">Ознакомиться</button>
-          <button id="go-profile" class="btn btn-ghost btn-lg" type="button">Просмотреть профиль</button>
+          <a id="go-dropoff" class="btn btn-lg" href="#dropoff">Да, сдать отходы</a>
+          <a id="go-info" class="btn btn-ghost btn-lg" href="#info">Ознакомиться</a>
+          <a id="go-profile" class="btn btn-ghost btn-lg" href="#profile">Просмотреть профиль</a>
         </div>
       </div>
     </section>
 
     <section class="page" data-page="dropoff">
       <header class="simple-header">
-        <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
-        <button class="btn btn-ghost" data-route="profile" type="button">Мой профиль</button>
+        <a class="btn btn-ghost" href="#welcome">← На главную</a>
+        <a class="btn btn-ghost" href="#profile">Мой профиль</a>
       </header>
 
       <section class="card">
@@ -51,7 +51,7 @@
 
     <section class="page" data-page="info">
       <header class="simple-header">
-        <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
+        <a class="btn btn-ghost" href="#welcome">← На главную</a>
       </header>
 
       <section class="card">
@@ -77,8 +77,8 @@
 
     <section class="page" data-page="profile">
       <header class="simple-header">
-        <button class="btn btn-ghost" data-route="welcome" type="button">← На главную</button>
-        <button class="btn btn-ghost" data-route="dropoff" type="button">Сдать отходы</button>
+        <a class="btn btn-ghost" href="#welcome">← На главную</a>
+        <a class="btn btn-ghost" href="#dropoff">Сдать отходы</a>
       </header>
 
       <section class="card">
