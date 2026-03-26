@@ -159,7 +159,7 @@ if (hasEl('delete-account')) {
     if (!confirm('Удалить аккаунт и данные пользователя?')) return;
 
     try {
-      await api(`/users/${state.userId}`, { method: 'DELETE' });
+      await api(`/api/users/${state.userId}`, { method: 'DELETE' });
       state.userId = null;
       localStorage.removeItem('eco_user_id');
       if (hasEl('user-id')) byId('user-id').value = '';
