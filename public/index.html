@@ -11,11 +11,20 @@
     <header class="topbar">
       <div>
         <p class="eyebrow">Вариант 4 • REST API + клиент</p>
-        <h1>EcoTrack ♻️</h1>
-        <p class="subtitle">Современный интерфейс для учёта отходов, пунктов приёма и отчётов об утилизации.</p>
+        <h1>Привет, волонтёр! 👋 Добро пожаловать в EcoTrack ♻️</h1>
+        <p class="subtitle">Платформа для учёта отходов: CRUD для справочников, отчёты, статистика и достижения.</p>
       </div>
       <button id="refresh-all" class="btn btn-secondary">Обновить данные</button>
     </header>
+
+    <section class="compliance card">
+      <h2>Соответствие заданию</h2>
+      <ul>
+        <li>✅ Обязательное: CRUD для <b>типов отходов</b> и <b>пунктов приёма</b>.</li>
+        <li>✅ Клиент: поиск пунктов приёма, статистика и система достижений.</li>
+        <li>⭐ Дополнительно: визуализация типов отходов карточками/иконками.</li>
+      </ul>
+    </section>
 
     <section class="stats-grid" id="stats-grid">
       <article class="stat-card">
@@ -36,6 +45,11 @@
       </article>
     </section>
 
+    <section class="waste-gallery card">
+      <h2>Категории отходов</h2>
+      <div id="waste-gallery" class="gallery-grid"></div>
+    </section>
+
     <section class="achievements" id="achievements">
       <h2>Награды и достижения</h2>
       <div class="badge-list" id="badge-list"></div>
@@ -46,7 +60,7 @@
         <div class="card-header">
           <h2>Типы отходов</h2>
         </div>
-        <form id="waste-form" class="inline-form">
+        <form id="waste-form" class="inline-form waste-form">
           <input type="hidden" id="waste-id" />
           <input id="waste-name" placeholder="Название" required />
           <input id="waste-description" placeholder="Описание" required />
@@ -59,6 +73,7 @@
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Иконка</th>
                 <th>Название</th>
                 <th>Описание</th>
                 <th>Баллы/кг</th>
@@ -75,7 +90,7 @@
           <h2>Пункты приёма</h2>
           <input id="point-search" placeholder="Поиск по городу/адресу..." />
         </div>
-        <form id="point-form" class="inline-form">
+        <form id="point-form" class="inline-form point-form">
           <input type="hidden" id="point-id" />
           <input id="point-name" placeholder="Название пункта" required />
           <input id="point-city" placeholder="Город" required />
@@ -104,7 +119,7 @@
           <h2>Отчёты об утилизации</h2>
         </div>
 
-        <form id="report-form" class="inline-form">
+        <form id="report-form" class="inline-form report-form">
           <input id="report-user" type="number" min="1" placeholder="User ID" required />
           <select id="report-waste" required></select>
           <select id="report-point" required></select>

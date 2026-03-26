@@ -8,6 +8,7 @@ const wasteBody = document.querySelector('#waste-body');
 const pointBody = document.querySelector('#point-body');
 const reportBody = document.querySelector('#report-body');
 const badgeList = document.querySelector('#badge-list');
+const gallery = document.querySelector('#waste-gallery');
 const formMessage = document.querySelector('#form-message');
 
 const wasteForm = document.querySelector('#waste-form');
@@ -20,6 +21,25 @@ const pointSearch = document.querySelector('#point-search');
 
 const byId = (id) => document.getElementById(id);
 const fmt = (n) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+
+const wasteImages = {
+  plastic: '/images/plastic.svg',
+  paper: '/images/paper.svg',
+  glass: '/images/glass.svg',
+  metal: '/images/metal.svg',
+  organic: '/images/organic.svg',
+  default: '/images/organic.svg'
+};
+
+function getWasteImage(name = '', description = '') {
+  const text = `${name} ${description}`.toLowerCase();
+  if (text.includes('пласт') || text.includes('plastic')) return wasteImages.plastic;
+  if (text.includes('бумаг') || text.includes('картон') || text.includes('paper')) return wasteImages.paper;
+  if (text.includes('стекл') || text.includes('glass')) return wasteImages.glass;
+  if (text.includes('металл') || text.includes('алюмин') || text.includes('metal')) return wasteImages.metal;
+  if (text.includes('орган') || text.includes('food') || text.includes('био')) return wasteImages.organic;
+  return wasteImages.default;
+}
 
 async function api(path, options = {}) {
   const response = await fetch(`/api${path}`, {
@@ -43,22 +63,39 @@ async function api(path, options = {}) {
 }
 
 function renderWasteTypes() {
-  wasteBody.innerHTML = state.wasteTypes.map((w) => `
-    <tr>
-      <td>${w.id}</td>
-      <td>${escapeHtml(w.name)}</td>
-      <td>${escapeHtml(w.description)}</td>
-      <td>${fmt(w.eco_points_per_kg)}</td>
-      <td class="actions">
-        <button class="btn btn-ghost" data-action="edit-waste" data-id="${w.id}">Изм.</button>
-        <button class="btn btn-danger" data-action="delete-waste" data-id="${w.id}">Удалить</button>
-      </td>
-    </tr>
-  `).join('');
+  wasteBody.innerHTML = state.wasteTypes.map((w) => {
+    const image = getWasteImage(w.name, w.description);
+    return `
+      <tr>
+        <td>${w.id}</td>
+        <td><img class="waste-icon" src="${image}" alt="${escapeHtml(w.name)}" /></td>
+        <td>${escapeHtml(w.name)}</td>
+        <td>${escapeHtml(w.description)}</td>
+        <td>${fmt(w.eco_points_per_kg)}</td>
+        <td class="actions">
+          <button class="btn btn-ghost" data-action="edit-waste" data-id="${w.id}">Изм.</button>
+          <button class="btn btn-danger" data-action="delete-waste" data-id="${w.id}">Удалить</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 
   reportWasteSelect.innerHTML = state.wasteTypes
     .map((w) => `<option value="${w.id}">${escapeHtml(w.name)}</option>`)
     .join('');
+
+  gallery.innerHTML = state.wasteTypes.map((w) => {
+    const image = getWasteImage(w.name, w.description);
+    return `
+      <article class="gallery-item">
+        <img src="${image}" alt="${escapeHtml(w.name)}" />
+        <div>
+          <p><strong>${escapeHtml(w.name)}</strong></p>
+          <p>${fmt(w.eco_points_per_kg)} балла/кг</p>
+        </div>
+      </article>
+    `;
+  }).join('');
 }
 
 function renderCollectionPoints() {
