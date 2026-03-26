@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoTrack — Профиль</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="simple-header">
+      <a class="btn btn-ghost" href="index.html">← На главную</a>
+      <a class="btn btn-ghost" href="dropoff.html">Сдать отходы</a>
+    </header>
+
+    <section class="card">
+      <h2>Вход в профиль</h2>
+      <form id="profile-form" class="grid-form user-form">
+        <input id="profile-id" type="number" min="1" placeholder="User ID" required />
+        <button class="btn" type="submit">Войти</button>
+      </form>
+      <p id="profile-message" class="message"></p>
+    </section>
+
+    <section class="card">
+      <h2>Моя статистика</h2>
+      <div class="stats-grid">
+        <div class="stat"><span>Отчётов</span><strong id="stat-reports">0</strong></div>
+        <div class="stat"><span>Вес (кг)</span><strong id="stat-weight">0</strong></div>
+        <div class="stat"><span>Баллы</span><strong id="stat-points">0</strong></div>
+      </div>
+      <div id="badge-list" class="badges"></div>
+      <button id="delete-account" class="btn btn-danger" type="button">Удалить аккаунт</button>
+    </section>
+  </main>
+  <script src="js/main.js"></script>
+</body>
+</html>

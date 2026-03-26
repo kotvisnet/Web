@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoTrack — Сдать отходы</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="simple-header">
+      <a class="btn btn-ghost" href="index.html">← На главную</a>
+      <a class="btn btn-ghost" href="profile.html">Мой профиль</a>
+    </header>
+
+    <section class="card">
+      <h2>Сдать отходы</h2>
+      <form id="user-form" class="grid-form user-form">
+        <input id="user-id" type="number" min="1" placeholder="Ваш User ID" required />
+        <button class="btn" type="submit">Сохранить User ID</button>
+      </form>
+
+      <form id="report-form" class="grid-form report-form-text">
+        <input id="waste-type-name" list="waste-types-list" placeholder="Вид отхода (например: Пластик)" required />
+        <datalist id="waste-types-list"></datalist>
+        <input id="collection-point-name" list="points-list" placeholder="Пункт выдачи/приёма" required />
+        <datalist id="points-list"></datalist>
+        <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Количество (кг)" required />
+        <button class="btn" type="submit">Отправить</button>
+      </form>
+
+      <p id="report-message" class="message"></p>
+    </section>
+
+    <section class="card">
+      <h3>Категории отходов</h3>
+      <div id="waste-gallery" class="gallery"></div>
+    </section>
+    <section class="card">
+      <h3>Категории отходов и зачем их сдавать</h3>
+      <p>Сдача отходов снижает загрязнение, экономит ресурсы и уменьшает объём мусора на полигонах.</p>
+      <ul id="waste-benefits" class="benefits-list"></ul>
+    </section>
+
+  </main>
+  <script src="js/main.js"></script>
+</body>
+</html>
