@@ -4,24 +4,6 @@ const state = {
   reports: []
 };
 
-const wasteBody = document.querySelector('#waste-body');
-const pointBody = document.querySelector('#point-body');
-const reportBody = document.querySelector('#report-body');
-const badgeList = document.querySelector('#badge-list');
-const gallery = document.querySelector('#waste-gallery');
-const formMessage = document.querySelector('#form-message');
-
-const wasteForm = document.querySelector('#waste-form');
-const pointForm = document.querySelector('#point-form');
-const reportForm = document.querySelector('#report-form');
-
-const reportWasteSelect = document.querySelector('#report-waste');
-const reportPointSelect = document.querySelector('#report-point');
-const pointSearch = document.querySelector('#point-search');
-
-const byId = (id) => document.getElementById(id);
-const fmt = (n) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
-
 const wasteImages = {
   plastic: '/images/plastic.svg',
   paper: '/images/paper.svg',
@@ -29,6 +11,22 @@ const wasteImages = {
   metal: '/images/metal.svg',
   organic: '/images/organic.svg',
   default: '/images/organic.svg'
+};
+
+const byId = (id) => document.getElementById(id);
+const fmt = (n) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+
+const ui = {
+  pages: [...document.querySelectorAll('.page')],
+  links: [...document.querySelectorAll('[data-link]')],
+  wasteBody: byId('waste-body'),
+  pointBody: byId('point-body'),
+  pointPublicBody: byId('point-public-body'),
+  reportBody: byId('report-body'),
+  badgeList: byId('badge-list'),
+  gallery: byId('waste-gallery'),
+  formMessage: byId('form-message'),
+  pointSearch: byId('point-search')
 };
 
 function getWasteImage(name = '', description = '') {
@@ -39,6 +37,23 @@ function getWasteImage(name = '', description = '') {
   if (text.includes('металл') || text.includes('алюмин') || text.includes('metal')) return wasteImages.metal;
   if (text.includes('орган') || text.includes('food') || text.includes('био')) return wasteImages.organic;
   return wasteImages.default;
+}
+
+function routeFromHash() {
+  const hash = window.location.hash || '#/home';
+  return hash.replace('#/', '') || 'home';
+}
+
+function applyRoute() {
+  const route = routeFromHash();
+  ui.pages.forEach((page) => {
+    page.classList.toggle('active', page.dataset.page === route);
+  });
+
+  ui.links.forEach((link) => {
+    const target = link.getAttribute('href').replace('#/', '');
+    link.classList.toggle('active', target === route);
+  });
 }
 
 async function api(path, options = {}) {
@@ -63,7 +78,7 @@ async function api(path, options = {}) {
 }
 
 function renderWasteTypes() {
-  wasteBody.innerHTML = state.wasteTypes.map((w) => {
+  ui.wasteBody.innerHTML = state.wasteTypes.map((w) => {
     const image = getWasteImage(w.name, w.description);
     return `
       <tr>
@@ -73,18 +88,18 @@ function renderWasteTypes() {
         <td>${escapeHtml(w.description)}</td>
         <td>${fmt(w.eco_points_per_kg)}</td>
         <td class="actions">
-          <button class="btn btn-ghost" data-action="edit-waste" data-id="${w.id}">Изм.</button>
-          <button class="btn btn-danger" data-action="delete-waste" data-id="${w.id}">Удалить</button>
+          <button type="button" class="btn btn-ghost" data-action="edit-waste" data-id="${w.id}">Изм.</button>
+          <button type="button" class="btn btn-danger" data-action="delete-waste" data-id="${w.id}">Удалить</button>
         </td>
       </tr>
     `;
   }).join('');
 
-  reportWasteSelect.innerHTML = state.wasteTypes
+  byId('report-waste').innerHTML = state.wasteTypes
     .map((w) => `<option value="${w.id}">${escapeHtml(w.name)}</option>`)
     .join('');
 
-  gallery.innerHTML = state.wasteTypes.map((w) => {
+  ui.gallery.innerHTML = state.wasteTypes.map((w) => {
     const image = getWasteImage(w.name, w.description);
     return `
       <article class="gallery-item">
@@ -99,31 +114,41 @@ function renderWasteTypes() {
 }
 
 function renderCollectionPoints() {
-  const query = pointSearch.value.trim().toLowerCase();
+  const query = ui.pointSearch.value.trim().toLowerCase();
   const filtered = state.collectionPoints.filter((p) =>
     [p.name, p.city, p.address].join(' ').toLowerCase().includes(query)
   );
 
-  pointBody.innerHTML = filtered.map((p) => `
+  const rows = filtered.map((p) => `
     <tr>
       <td>${p.id}</td>
       <td>${escapeHtml(p.name)}</td>
       <td>${escapeHtml(p.city)}</td>
       <td>${escapeHtml(p.address)}</td>
       <td class="actions">
-        <button class="btn btn-ghost" data-action="edit-point" data-id="${p.id}">Изм.</button>
-        <button class="btn btn-danger" data-action="delete-point" data-id="${p.id}">Удалить</button>
+        <button type="button" class="btn btn-ghost" data-action="edit-point" data-id="${p.id}">Изм.</button>
+        <button type="button" class="btn btn-danger" data-action="delete-point" data-id="${p.id}">Удалить</button>
       </td>
     </tr>
   `).join('');
 
-  reportPointSelect.innerHTML = state.collectionPoints
+  ui.pointBody.innerHTML = rows;
+  ui.pointPublicBody.innerHTML = filtered.map((p) => `
+    <tr>
+      <td>${p.id}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.city)}</td>
+      <td>${escapeHtml(p.address)}</td>
+    </tr>
+  `).join('');
+
+  byId('report-point').innerHTML = state.collectionPoints
     .map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.city)})</option>`)
     .join('');
 }
 
 function renderReports() {
-  reportBody.innerHTML = state.reports.map((r) => `
+  ui.reportBody.innerHTML = state.reports.slice().reverse().map((r) => `
     <tr>
       <td>${r.id}</td>
       <td>${r.user_id}</td>
@@ -149,14 +174,14 @@ function renderReports() {
 
 function renderAchievements(points, reports, weight) {
   const achievements = [
-    { title: 'Первые шаги', unlocked: reports >= 1, target: '1 отчёт' },
-    { title: 'Эко-активист', unlocked: reports >= 10, target: '10 отчётов' },
-    { title: '100 кг спасено', unlocked: weight >= 100, target: '100 кг' },
-    { title: '1000 эко-баллов', unlocked: points >= 1000, target: '1000 баллов' }
+    { title: 'Первый вклад', unlocked: reports >= 1 },
+    { title: 'Эко-активист', unlocked: reports >= 10 },
+    { title: '100 кг спасено', unlocked: weight >= 100 },
+    { title: '1000 эко-баллов', unlocked: points >= 1000 }
   ];
 
-  badgeList.innerHTML = achievements
-    .map((a) => `<span class="badge ${a.unlocked ? 'active' : ''}">${a.title} • ${a.target}</span>`)
+  ui.badgeList.innerHTML = achievements
+    .map((a) => `<span class="badge ${a.unlocked ? 'active' : ''}">${a.title}</span>`)
     .join('');
 }
 
@@ -176,11 +201,11 @@ async function loadAll() {
     renderCollectionPoints();
     renderReports();
   } catch (error) {
-    formMessage.textContent = `Ошибка загрузки данных: ${error.message}`;
+    ui.formMessage.textContent = `Ошибка загрузки данных: ${error.message}`;
   }
 }
 
-wasteForm.addEventListener('submit', async (e) => {
+byId('waste-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = byId('waste-id').value;
 
@@ -195,12 +220,12 @@ wasteForm.addEventListener('submit', async (e) => {
     body: JSON.stringify(payload)
   });
 
-  wasteForm.reset();
+  e.target.reset();
   byId('waste-id').value = '';
   await loadAll();
 });
 
-pointForm.addEventListener('submit', async (e) => {
+byId('point-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = byId('point-id').value;
 
@@ -215,18 +240,18 @@ pointForm.addEventListener('submit', async (e) => {
     body: JSON.stringify(payload)
   });
 
-  pointForm.reset();
+  e.target.reset();
   byId('point-id').value = '';
   await loadAll();
 });
 
-reportForm.addEventListener('submit', async (e) => {
+byId('report-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
     const payload = {
       user_id: Number(byId('report-user').value),
-      waste_type_id: Number(reportWasteSelect.value),
-      collection_point_id: Number(reportPointSelect.value),
+      waste_type_id: Number(byId('report-waste').value),
+      collection_point_id: Number(byId('report-point').value),
       weight_kg: Number(byId('report-weight').value)
     };
 
@@ -235,18 +260,17 @@ reportForm.addEventListener('submit', async (e) => {
       body: JSON.stringify(payload)
     });
 
-    formMessage.textContent = `✅ Отчёт сохранён. Начислено баллов: ${fmt(result.earnedPoints)}`;
-    reportForm.reset();
+    ui.formMessage.textContent = `✅ Отходы приняты! Вам начислено ${fmt(result.earnedPoints)} баллов.`;
+    e.target.reset();
     await loadAll();
   } catch (error) {
-    formMessage.textContent = `❌ Не удалось добавить отчёт: ${error.message}`;
+    ui.formMessage.textContent = `❌ Не удалось отправить отчёт: ${error.message}`;
   }
 });
 
 document.body.addEventListener('click', async (e) => {
   const target = e.target;
   if (!(target instanceof HTMLElement)) return;
-
   const { action, id } = target.dataset;
   if (!action || !id) return;
 
@@ -257,6 +281,7 @@ document.body.addEventListener('click', async (e) => {
     byId('waste-name').value = row.name;
     byId('waste-description').value = row.description;
     byId('waste-points').value = row.eco_points_per_kg;
+    window.location.hash = '#/manage';
   }
 
   if (action === 'delete-waste' && confirm('Удалить тип отходов?')) {
@@ -271,6 +296,7 @@ document.body.addEventListener('click', async (e) => {
     byId('point-name').value = row.name;
     byId('point-city').value = row.city;
     byId('point-address').value = row.address;
+    window.location.hash = '#/manage';
   }
 
   if (action === 'delete-point' && confirm('Удалить пункт приёма?')) {
@@ -280,17 +306,18 @@ document.body.addEventListener('click', async (e) => {
 });
 
 byId('waste-reset').addEventListener('click', () => {
-  wasteForm.reset();
+  byId('waste-form').reset();
   byId('waste-id').value = '';
 });
 
 byId('point-reset').addEventListener('click', () => {
-  pointForm.reset();
+  byId('point-form').reset();
   byId('point-id').value = '';
 });
 
-pointSearch.addEventListener('input', renderCollectionPoints);
 byId('refresh-all').addEventListener('click', loadAll);
+ui.pointSearch.addEventListener('input', renderCollectionPoints);
+window.addEventListener('hashchange', applyRoute);
 
 function escapeHtml(text) {
   return String(text ?? '')
@@ -301,4 +328,5 @@ function escapeHtml(text) {
     .replaceAll("'", '&#39;');
 }
 
+applyRoute();
 loadAll();
