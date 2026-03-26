@@ -6,12 +6,12 @@ const state = {
 };
 
 const images = {
-  plastic: '/images/plastic.svg',
-  paper: '/images/paper.svg',
-  glass: '/images/glass.svg',
-  metal: '/images/metal.svg',
-  organic: '/images/organic.svg',
-  default: '/images/organic.svg'
+  plastic: 'images/plastic.svg',
+  paper: 'images/paper.svg',
+  glass: 'images/glass.svg',
+  metal: 'images/metal.svg',
+  organic: 'images/organic.svg',
+  default: 'images/organic.svg'
 };
 
 const byId = (id) => document.getElementById(id);
@@ -35,6 +35,12 @@ function getCurrentUserReports() {
 
 function renderWasteGallery() {
   if (!hasEl('waste-gallery')) return;
+
+  if (!state.wasteTypes.length) {
+    byId('waste-gallery').innerHTML = '<p>Типы отходов пока не загружены.</p>';
+    return;
+  }
+
   byId('waste-gallery').innerHTML = state.wasteTypes.map((w) => {
     const img = getImage(w.name, w.description);
     return `
@@ -49,8 +55,31 @@ function renderWasteGallery() {
   }).join('');
 }
 
+function renderBenefits() {
+  if (!hasEl('waste-benefits')) return;
+
+  const defaultReasons = [
+    'Пластик: меньше загрязнения рек и морей.',
+    'Бумага: сохраняются деревья и вода.',
+    'Стекло: почти бесконечная переработка без потери качества.',
+    'Металл: экономия энергии и природных руд.',
+    'Органика: меньше метана на полигонах.'
+  ];
+
+  const fromDb = state.wasteTypes.map((w) => `${escapeHtml(w.name)}: ${escapeHtml(w.description || 'подходит для переработки и начисления баллов')}.`);
+  const list = fromDb.length ? fromDb : defaultReasons;
+
+  byId('waste-benefits').innerHTML = list.map((item) => `<li>${item}</li>`).join('');
+}
+
 function renderWasteSelect() {
   if (!hasEl('report-waste')) return;
+
+  if (!state.wasteTypes.length) {
+    byId('report-waste').innerHTML = '<option value="">Нет доступных типов отходов</option>';
+    return;
+  }
+
   byId('report-waste').innerHTML = state.wasteTypes
     .map((w) => `<option value="${w.id}">${escapeHtml(w.name)}</option>`)
     .join('');
@@ -58,19 +87,21 @@ function renderWasteSelect() {
 
 function renderPoints(points = state.points) {
   if (hasEl('points-body')) {
-    byId('points-body').innerHTML = points.map((p) => `
-      <tr>
-        <td>${escapeHtml(p.name)}</td>
-        <td>${escapeHtml(p.city)}</td>
-        <td>${escapeHtml(p.address)}</td>
-      </tr>
-    `).join('');
+    byId('points-body').innerHTML = points.length
+      ? points.map((p) => `
+          <tr>
+            <td>${escapeHtml(p.name)}</td>
+            <td>${escapeHtml(p.city)}</td>
+            <td>${escapeHtml(p.address)}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="3">Пункты сбора пока не загружены.</td></tr>';
   }
 
   if (hasEl('report-point')) {
-    byId('report-point').innerHTML = state.points
-      .map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.city)})</option>`)
-      .join('');
+    byId('report-point').innerHTML = state.points.length
+      ? state.points.map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.city)})</option>`).join('')
+      : '<option value="">Нет доступных пунктов</option>';
   }
 }
 
@@ -104,28 +135,62 @@ async function api(path, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     ...options
   });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `Ошибка API: ${response.status}`);
-  }
+
+  const contentType = response.headers.get('content-type') || '';
   const text = await response.text();
-  return text ? JSON.parse(text) : null;
+
+  if (!response.ok) {
+    if (response.status === 504 || text.includes('504 Gateway Time-out')) {
+      throw new Error('Сервер временно недоступен (504). Проверьте, запущен ли Node API и прокси nginx.');
+    }
+
+    if (contentType.includes('application/json')) {
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.error || `Ошибка API: ${response.status}`);
+      } catch {
+        throw new Error(`Ошибка API: ${response.status}`);
+      }
+    }
+
+    throw new Error(`Ошибка API: ${response.status}`);
+  }
+
+  if (!text) return null;
+  if (contentType.includes('application/json')) {
+    return JSON.parse(text);
+  }
+
+  return null;
 }
 
 async function loadData() {
-  const [wasteTypes, points, reports] = await Promise.all([
+  const [wasteResult, pointsResult, reportsResult] = await Promise.allSettled([
     api('/waste-types'),
     api('/collection-points'),
     api('/reports')
   ]);
-  state.wasteTypes = wasteTypes;
-  state.points = points;
-  state.reports = reports;
+
+  state.wasteTypes = wasteResult.status === 'fulfilled' ? wasteResult.value : [];
+  state.points = pointsResult.status === 'fulfilled' ? pointsResult.value : [];
+  state.reports = reportsResult.status === 'fulfilled' ? reportsResult.value : [];
 
   renderWasteGallery();
+  renderBenefits();
   renderWasteSelect();
-  renderPoints();
+  renderPoints(state.points);
   renderUserStats();
+
+  const errors = [wasteResult, pointsResult, reportsResult]
+    .filter((r) => r.status === 'rejected')
+    .map((r) => r.reason?.message)
+    .filter(Boolean);
+
+  if (errors.length) {
+    const text = errors[0];
+    if (hasEl('report-message')) byId('report-message').textContent = text;
+    if (hasEl('profile-message')) byId('profile-message').textContent = text;
+  }
 }
 
 if (hasEl('user-form')) {
@@ -180,6 +245,11 @@ if (hasEl('report-form')) {
       return;
     }
 
+    if (!state.wasteTypes.length || !state.points.length) {
+      byId('report-message').textContent = 'Нет данных по отходам или пунктам. Проверьте API.';
+      return;
+    }
+
     const payload = {
       user_id: state.userId,
       waste_type_id: Number(byId('report-waste').value),
@@ -188,11 +258,11 @@ if (hasEl('report-form')) {
     };
 
     try {
-      const result = await api('/reports', {
+      await api('/reports', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      byId('report-message').textContent = `✅ Успешно! Начислено ${fmt(result.earnedPoints)} баллов.`;
+      byId('report-message').textContent = 'Заявка отправлена!';
       e.target.reset();
       await loadData();
     } catch (error) {
@@ -205,6 +275,10 @@ if (hasEl('nearest-form')) {
   byId('nearest-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const city = byId('nearest-city').value.trim().toLowerCase();
+    if (!city) {
+      renderPoints(state.points);
+      return;
+    }
     const matches = state.points.filter((p) => p.city.toLowerCase().includes(city));
     renderPoints(matches.length ? matches : state.points);
   });
@@ -227,7 +301,4 @@ if (savedId) {
   if (hasEl('profile-message')) byId('profile-message').textContent = `Автовход: User ID ${savedId}`;
 }
 
-loadData().catch((error) => {
-  if (hasEl('report-message')) byId('report-message').textContent = error.message;
-  if (hasEl('profile-message')) byId('profile-message').textContent = error.message;
-});
+loadData();
