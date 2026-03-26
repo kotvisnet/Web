@@ -110,7 +110,12 @@ function renderUserStats() {
 
   const reports = getCurrentUserReports();
   const weight = reports.reduce((sum, r) => sum + Number(r.weight_kg || 0), 0);
-  const points = reports.reduce((sum, r) => sum + Number(r.earnedPoints || 0), 0);
+  const wasteMap = new Map(state.wasteTypes.map((w) => [Number(w.id), Number(w.eco_points_per_kg || 0)]));
+  const points = reports.reduce((sum, r) => {
+    if (r.earnedPoints !== undefined && r.earnedPoints !== null) return sum + Number(r.earnedPoints);
+    const perKg = wasteMap.get(Number(r.waste_type_id)) || 0;
+    return sum + perKg * Number(r.weight_kg || 0);
+  }, 0);
 
   byId('stat-reports').textContent = fmt(reports.length);
   byId('stat-weight').textContent = fmt(weight);
@@ -250,13 +255,25 @@ if (hasEl('report-form')) {
       return;
     }
 
+    const selectedWasteId = hasEl('manual-waste-id') && byId('manual-waste-id').value
+      ? Number(byId('manual-waste-id').value)
+      : Number(byId('report-waste').value);
+    const selectedPointId = hasEl('manual-point-id') && byId('manual-point-id').value
+      ? Number(byId('manual-point-id').value)
+      : Number(byId('report-point').value);
+
     const payload = {
       user_id: state.userId,
-      waste_type_id: Number(byId('report-waste').value),
-      collection_point_id: Number(byId('report-point').value),
+      waste_type_id: selectedWasteId,
+      collection_point_id: selectedPointId,
       weight_kg: Number(byId('report-weight').value)
     };
 
+
+    if (!payload.waste_type_id || !payload.collection_point_id || !payload.weight_kg) {
+      byId('report-message').textContent = 'Укажите тип отхода, пункт приёма и количество.';
+      return;
+    }
     try {
       await api('/reports', {
         method: 'POST',

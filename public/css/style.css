@@ -54,9 +54,19 @@ input, select, button { min-height: 42px; border-radius: 10px; border: 1px solid
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
 
+
+.manual-note {
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.manual-form {
+  grid-template-columns: 1fr 1fr;
+}
+
 @media (max-width: 800px) {
   .welcome-card h1 { font-size: 36px; }
-  .user-form, .report-form { grid-template-columns: 1fr; }
+  .user-form, .report-form, .manual-form { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr; }
 }
 
