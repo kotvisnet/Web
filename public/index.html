@@ -7,103 +7,16 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <main class="app">
-    <section class="page active welcome-page" data-page="welcome">
-      <div class="welcome-card">
-        <h1>EcoTrack ♻️</h1>
-        <p>Вы хотите сдать отходы?</p>
-        <div class="welcome-actions">
-          <a id="go-dropoff" class="btn btn-lg" href="#dropoff">Да, сдать отходы</a>
-          <a id="go-info" class="btn btn-ghost btn-lg" href="#info">Ознакомиться</a>
-          <a id="go-profile" class="btn btn-ghost btn-lg" href="#profile">Просмотреть профиль</a>
-        </div>
+  <main class="app center-screen">
+    <section class="welcome-card">
+      <h1>EcoTrack ♻️</h1>
+      <p>Вы хотите сдать отходы?</p>
+      <div class="welcome-actions">
+        <a class="btn btn-lg" href="/dropoff.html">Да, сдать отходы</a>
+        <a class="btn btn-ghost btn-lg" href="/info.html">Ознакомиться</a>
+        <a class="btn btn-ghost btn-lg" href="/profile.html">Просмотреть профиль</a>
       </div>
     </section>
-
-    <section class="page" data-page="dropoff">
-      <header class="simple-header">
-        <a class="btn btn-ghost" href="#welcome">← На главную</a>
-        <a class="btn btn-ghost" href="#profile">Мой профиль</a>
-      </header>
-
-      <section class="card">
-        <h2>Сдать отходы</h2>
-        <form id="user-form" class="grid-form user-form">
-          <input id="user-id" type="number" min="1" placeholder="Ваш User ID" required />
-          <button class="btn" type="submit">Сохранить User ID</button>
-        </form>
-
-        <form id="report-form" class="grid-form report-form">
-          <select id="report-waste" required></select>
-          <select id="report-point" required></select>
-          <input id="report-weight" type="number" min="0.1" step="0.01" placeholder="Количество (кг)" required />
-          <button class="btn" type="submit">Отправить</button>
-        </form>
-
-        <p id="report-message" class="message"></p>
-      </section>
-
-      <section class="card">
-        <h3>Категории отходов</h3>
-        <div id="waste-gallery" class="gallery"></div>
-      </section>
-    </section>
-
-    <section class="page" data-page="info">
-      <header class="simple-header">
-        <a class="btn btn-ghost" href="#welcome">← На главную</a>
-      </header>
-
-      <section class="card">
-        <h2>О сайте EcoTrack</h2>
-        <p>EcoTrack помогает сдавать отходы, получать эко-баллы и отслеживать личный вклад в экологию.</p>
-        <p>Вы можете выбрать тип отхода, указать количество и пункт приёма, после чего получить баллы.</p>
-      </section>
-
-      <section class="card">
-        <h3>Пункты сбора</h3>
-        <form id="nearest-form" class="grid-form user-form">
-          <input id="nearest-city" placeholder="Введите город" required />
-          <button class="btn" type="submit">Найти</button>
-        </form>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Название</th><th>Город</th><th>Адрес</th></tr></thead>
-            <tbody id="points-body"></tbody>
-          </table>
-        </div>
-      </section>
-    </section>
-
-    <section class="page" data-page="profile">
-      <header class="simple-header">
-        <a class="btn btn-ghost" href="#welcome">← На главную</a>
-        <a class="btn btn-ghost" href="#dropoff">Сдать отходы</a>
-      </header>
-
-      <section class="card">
-        <h2>Вход в профиль</h2>
-        <form id="profile-form" class="grid-form user-form">
-          <input id="profile-id" type="number" min="1" placeholder="User ID" required />
-          <button class="btn" type="submit">Войти</button>
-        </form>
-        <p id="profile-message" class="message"></p>
-      </section>
-
-      <section class="card">
-        <h2>Моя статистика</h2>
-        <div class="stats-grid">
-          <div class="stat"><span>Отчётов</span><strong id="stat-reports">0</strong></div>
-          <div class="stat"><span>Вес (кг)</span><strong id="stat-weight">0</strong></div>
-          <div class="stat"><span>Баллы</span><strong id="stat-points">0</strong></div>
-        </div>
-        <div id="badge-list" class="badges"></div>
-
-        <button id="delete-account" class="btn btn-danger" type="button">Удалить аккаунт</button>
-      </section>
-    </section>
   </main>
-
-  <script src="/js/main.js"></script>
 </body>
 </html>
